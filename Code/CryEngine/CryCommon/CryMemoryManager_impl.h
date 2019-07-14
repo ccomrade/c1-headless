@@ -244,14 +244,14 @@ struct _CryMemoryManagerPoolHelper
 		if (!hMod || !_CryMalloc || !_CryRealloc || !_CryFree || !_CryGetMemSize ||! _CryCrtMalloc || !_CryCrtFree)
 		{
 #ifndef AVOID_MEMORY_ERROR
-			#ifdef WIN32
-				MessageBox(NULL, "Could not access CrySystem.dll (check working directory)", "Memory Manager", MB_OK);
-      #else
-      if (!hMod)
-        OutputDebugString("Could not access CrySystem.dll (check working directory)");
-      else
-        OutputDebugString("Could not get Memory Functions in CrySystem.dll");
-			#endif
+//		#ifdef WIN32
+//			MessageBox(NULL, "Could not access CrySystem.dll (check working directory)", "Memory Manager", MB_OK);
+//		#else
+			if (!hMod)
+				puts("Could not access CrySystem.dll (check working directory)");
+			else
+				puts("Could not get Memory Functions in CrySystem.dll");
+//		#endif
 			exit(1);
 #endif
 		};
