@@ -1,0 +1,34 @@
+// Launcher resources
+
+#include <winver.h>
+
+#include "config.h"
+
+VS_VERSION_INFO VERSIONINFO
+FILEVERSION     C1HEADLESS_VERSION_MAJOR,C1HEADLESS_VERSION_MINOR,0,0
+PRODUCTVERSION  C1HEADLESS_VERSION_MAJOR,C1HEADLESS_VERSION_MINOR,0,0
+FILEOS          VOS__WINDOWS32
+FILETYPE        VFT_APP
+BEGIN
+	BLOCK "StringFileInfo"
+	BEGIN
+		BLOCK "040904E4"
+		BEGIN
+		#ifdef BUILD_64BIT
+			VALUE "FileDescription",  "Crysis 64-bit Headless Server"
+		#else
+			VALUE "FileDescription",  "Crysis 32-bit Headless Server"
+		#endif
+			VALUE "FileVersion",      C1HEADLESS_VERSION_STRING
+			VALUE "InternalName",     "CrysisHeadlessServer"
+			VALUE "OriginalFilename", "CrysisHeadlessServer.exe"
+			VALUE "ProductName",      "C1-Headless"
+			VALUE "ProductVersion",   C1HEADLESS_VERSION_STRING
+		END
+	END
+
+	BLOCK "VarFileInfo"
+	BEGIN
+		VALUE "Translation", 0x409, 1252
+	END
+END
