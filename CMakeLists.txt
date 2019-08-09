@@ -36,6 +36,7 @@ add_executable(CrysisHeadlessServer
 
 target_include_directories(CrysisHeadlessServer PRIVATE
   Code/Launcher
+  Code/Library
   Code/CryEngine/CryCommon
   Code/CryEngine/CryAction
   ${PROJECT_BINARY_DIR}
