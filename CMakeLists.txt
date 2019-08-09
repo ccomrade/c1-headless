@@ -7,7 +7,7 @@ endif()
 
 set(CMAKE_INSTALL_PREFIX "${PROJECT_BINARY_DIR}" CACHE INTERNAL "Install target is not defined.")
 
-project(C1-Headless VERSION 1.0 LANGUAGES CXX RC)
+project(C1-Headless VERSION 1.1 LANGUAGES CXX RC)
 
 if(NOT MSVC)
 	message(FATAL_ERROR "MSVC is the only supported compiler!")
