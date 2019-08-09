@@ -151,6 +151,14 @@ public:
 	}
 };
 
+extern "C"
+{
+	void _putchar( char c )  // required by the printf library
+	{
+		// "printf" and "vprintf" functions are not used, so this function can be empty
+	}
+}
+
 static int RunServer( HMODULE libCryGame )
 {
 	IGameStartup::TEntryFunction fCreateGameStartup;
