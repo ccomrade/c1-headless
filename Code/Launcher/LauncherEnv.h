@@ -5,8 +5,12 @@
 
 #pragma once
 
+class TaskSystem;
+
 struct LauncherEnv
 {
+	TaskSystem *pTaskSystem;
+
 	int gameVersion;
 	unsigned long mainThreadID;
 };

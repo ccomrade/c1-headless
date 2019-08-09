@@ -15,6 +15,7 @@
 
 // Launcher headers
 #include "LauncherEnv.h"
+#include "TaskSystem.h"
 #include "Patch.h"
 #include "CPU.h"
 #include "Util.h"
@@ -31,6 +32,8 @@ class GlobalLauncherEnv
 {
 	LauncherEnv m_env;
 
+	unsigned char m_memTaskSystem[sizeof (TaskSystem)];
+
 public:
 	GlobalLauncherEnv()
 	{
@@ -42,7 +45,15 @@ public:
 
 	~GlobalLauncherEnv()
 	{
+		if ( gLauncher->pTaskSystem )
+			gLauncher->pTaskSystem->~TaskSystem();
+
 		gLauncher = NULL;
+	}
+
+	void InitTaskSystem()
+	{
+		gLauncher->pTaskSystem = new (m_memTaskSystem) TaskSystem();
 	}
 };
 
@@ -306,6 +317,8 @@ int main()
 			return 1;
 		}
 	}
+
+	env.InitTaskSystem();
 
 	// launch the server
 	int status = RunServer( libCryGame );
