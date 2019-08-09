@@ -8,10 +8,10 @@
 #include "platform_impl.h"
 #include "platform.h"
 #include "IGameStartup.h"
-#include "ISystem.h"
 
 // Launcher headers
 #include "LauncherEnv.h"
+#include "EngineListener.h"
 #include "TaskSystem.h"
 #include "Log.h"
 #include "Patch.h"
@@ -32,6 +32,7 @@ class GlobalLauncherEnv
 
 	unsigned char m_memLog[sizeof (Log)];
 	unsigned char m_memTaskSystem[sizeof (TaskSystem)];
+	unsigned char m_memEngineListener[sizeof (EngineListener)];
 
 public:
 	GlobalLauncherEnv()
@@ -44,6 +45,9 @@ public:
 
 	~GlobalLauncherEnv()
 	{
+		if ( gLauncher->pEngineListener )
+			gLauncher->pEngineListener->~EngineListener();
+
 		if ( gLauncher->pTaskSystem )
 			gLauncher->pTaskSystem->~TaskSystem();
 
@@ -62,68 +66,10 @@ public:
 	{
 		gLauncher->pTaskSystem = new (m_memTaskSystem) TaskSystem();
 	}
-};
 
-extern "C"
-{
-	void _putchar( char c )  // required by the printf library
+	void InitEngineListerner()
 	{
-		// "printf" and "vprintf" functions are not used, so this function can be empty
-	}
-}
-
-static void LogInfo( const char *format, ... )
-{
-	va_list args;
-	va_start( args, format );
-	gLauncher->pLog->LogToStdOutV( format, args );
-	va_end( args );
-}
-
-static void LogError( const char *format, ... )
-{
-	va_list args;
-	va_start( args, format );
-	gLauncher->pLog->LogToStdErrV( format, args, "Error: " );
-	va_end( args );
-}
-
-struct CUserCallback : public ISystemUserCallback
-{
-	bool OnError( const char *szErrorString ) override
-	{
-		LogError( "%s", szErrorString );
-		return true;  // quit
-	}
-
-	void OnSaveDocument() override
-	{
-	}
-
-	void OnProcessSwitch() override
-	{
-	}
-
-	void OnInitProgress( const char *sProgressMsg ) override
-	{
-		LogInfo( "%s", sProgressMsg );
-	}
-
-	void OnInit( ISystem *pSystem ) override
-	{
-	}
-
-	void OnShutdown() override
-	{
-		LogInfo( "Quit" );
-	}
-
-	void OnUpdate() override
-	{
-	}
-
-	void GetMemoryUsage( ICrySizer *pSizer ) override
-	{
+		gLauncher->pEngineListener = new (m_memEngineListener) EngineListener();
 	}
 };
 
@@ -156,6 +102,30 @@ public:
 	}
 };
 
+extern "C"
+{
+	void _putchar( char c )  // required by the printf library
+	{
+		// "printf" and "vprintf" functions are not used, so this function can be empty
+	}
+}
+
+static void LogInfo( const char *format, ... )
+{
+	va_list args;
+	va_start( args, format );
+	gLauncher->pLog->LogToStdOutV( format, args );
+	va_end( args );
+}
+
+static void LogError( const char *format, ... )
+{
+	va_list args;
+	va_start( args, format );
+	gLauncher->pLog->LogToStdErrV( format, args, "Error: " );
+	va_end( args );
+}
+
 static int RunServer( HMODULE libCryGame )
 {
 	IGameStartup::TEntryFunction fCreateGameStartup;
@@ -174,8 +144,6 @@ static int RunServer( HMODULE libCryGame )
 		return -1;
 	}
 
-	CUserCallback userCallback;
-
 	const char *cmdLine = GetCommandLineA();
 	const size_t cmdLineLength = strlen( cmdLine );
 
@@ -183,7 +151,7 @@ static int RunServer( HMODULE libCryGame )
 	memset( &params, 0, sizeof params );
 
 	params.hInstance = GetModuleHandle( NULL );
-	params.pUserCallback = &userCallback;  // disables dedicated server console window
+	params.pUserCallback = gLauncher->pEngineListener;  // disables dedicated server console window
 	params.sLogFileName = "Server.log";
 	params.bDedicatedServer = true;  // better than adding "-dedicated" to the command line
 
@@ -326,7 +294,9 @@ int main()
 		}
 	}
 
+	// init the remaining global stuff
 	env.InitTaskSystem();
+	env.InitEngineListerner();
 
 	// launch the server
 	int status = RunServer( libCryGame );
