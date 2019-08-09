@@ -5,10 +5,12 @@
 
 #pragma once
 
+class Log;
 class TaskSystem;
 
 struct LauncherEnv
 {
+	Log *pLog;
 	TaskSystem *pTaskSystem;
 
 	int gameVersion;

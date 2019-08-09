@@ -3,9 +3,6 @@
  * @brief Headless dedicated server launcher.
  */
 
-#include <stdio.h>
-#include <stdarg.h>
-
 // CryEngine headers
 #include "CryModuleDefs.h"
 #include "platform_impl.h"
@@ -16,6 +13,7 @@
 // Launcher headers
 #include "LauncherEnv.h"
 #include "TaskSystem.h"
+#include "Log.h"
 #include "Patch.h"
 #include "CPU.h"
 #include "Util.h"
@@ -32,6 +30,7 @@ class GlobalLauncherEnv
 {
 	LauncherEnv m_env;
 
+	unsigned char m_memLog[sizeof (Log)];
 	unsigned char m_memTaskSystem[sizeof (TaskSystem)];
 
 public:
@@ -48,7 +47,15 @@ public:
 		if ( gLauncher->pTaskSystem )
 			gLauncher->pTaskSystem->~TaskSystem();
 
+		if ( gLauncher->pLog )
+			gLauncher->pLog->~Log();
+
 		gLauncher = NULL;
+	}
+
+	void InitLog()
+	{
+		gLauncher->pLog = new (m_memLog) Log();
 	}
 
 	void InitTaskSystem()
@@ -57,37 +64,35 @@ public:
 	}
 };
 
-static void LogInfo( const char *msg )
+extern "C"
 {
-	puts( msg );
-
-	fflush( stdout );
+	void _putchar( char c )  // required by the printf library
+	{
+		// "printf" and "vprintf" functions are not used, so this function can be empty
+	}
 }
 
-static void LogError( const char *msg )
-{
-	printf( "Error: %s\n", msg );
-
-	fflush( stdout );
-}
-
-static void Log( const char *format, ... )
+static void LogInfo( const char *format, ... )
 {
 	va_list args;
 	va_start( args, format );
-	vprintf( format, args );
+	gLauncher->pLog->LogToStdOutV( format, args );
 	va_end( args );
+}
 
-	putchar( '\n' );
-
-	fflush( stdout );
+static void LogError( const char *format, ... )
+{
+	va_list args;
+	va_start( args, format );
+	gLauncher->pLog->LogToStdErrV( format, args, "Error: " );
+	va_end( args );
 }
 
 struct CUserCallback : public ISystemUserCallback
 {
 	bool OnError( const char *szErrorString ) override
 	{
-		LogError( szErrorString );
+		LogError( "%s", szErrorString );
 		return true;  // quit
 	}
 
@@ -101,7 +106,7 @@ struct CUserCallback : public ISystemUserCallback
 
 	void OnInitProgress( const char *sProgressMsg ) override
 	{
-		LogInfo( sProgressMsg );
+		LogInfo( "%s", sProgressMsg );
 	}
 
 	void OnInit( ISystem *pSystem ) override
@@ -150,14 +155,6 @@ public:
 		return m_handle;
 	}
 };
-
-extern "C"
-{
-	void _putchar( char c )  // required by the printf library
-	{
-		// "printf" and "vprintf" functions are not used, so this function can be empty
-	}
-}
 
 static int RunServer( HMODULE libCryGame )
 {
@@ -256,6 +253,9 @@ int main()
 {
 	GlobalLauncherEnv env;
 
+	// init launcher log required by "LogInfo" and "LogError" functions
+	env.InitLog();
+
 	LogInfo( "C1-Headless " LAUNCHER_BUILD_VERSION );
 
 	DLLHandleGuard libCryGame = LoadLibraryA( "CryGame.dll" );
@@ -297,7 +297,7 @@ int main()
 	else
 	{
 		gLauncher->gameVersion = gameVersion;
-		Log( "Detected game version: %d", gameVersion );
+		LogInfo( "Detected game version: %d", gameVersion );
 	}
 
 	// check version of the game and apply memory patches
