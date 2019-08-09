@@ -12,6 +12,7 @@
 // Launcher headers
 #include "LauncherEnv.h"
 #include "EngineListener.h"
+#include "Validator.h"
 #include "TaskSystem.h"
 #include "Log.h"
 #include "Patch.h"
@@ -32,6 +33,7 @@ class GlobalLauncherEnv
 
 	unsigned char m_memLog[sizeof (Log)];
 	unsigned char m_memTaskSystem[sizeof (TaskSystem)];
+	unsigned char m_memValidator[sizeof (Validator)];
 	unsigned char m_memEngineListener[sizeof (EngineListener)];
 
 public:
@@ -47,6 +49,9 @@ public:
 	{
 		if ( gLauncher->pEngineListener )
 			gLauncher->pEngineListener->~EngineListener();
+
+		if ( gLauncher->pValidator )
+			gLauncher->pValidator->~Validator();
 
 		if ( gLauncher->pTaskSystem )
 			gLauncher->pTaskSystem->~TaskSystem();
@@ -65,6 +70,11 @@ public:
 	void InitTaskSystem()
 	{
 		gLauncher->pTaskSystem = new (m_memTaskSystem) TaskSystem();
+	}
+
+	void InitValidator()
+	{
+		gLauncher->pValidator = new (m_memValidator) Validator();
 	}
 
 	void InitEngineListerner()
@@ -152,6 +162,7 @@ static int RunServer( HMODULE libCryGame )
 
 	params.hInstance = GetModuleHandle( NULL );
 	params.pUserCallback = gLauncher->pEngineListener;  // disables dedicated server console window
+	params.pValidator = gLauncher->pValidator;
 	params.sLogFileName = "Server.log";
 	params.bDedicatedServer = true;  // better than adding "-dedicated" to the command line
 
@@ -296,6 +307,7 @@ int main()
 
 	// init the remaining global stuff
 	env.InitTaskSystem();
+	env.InitValidator();
 	env.InitEngineListerner();
 
 	// launch the server

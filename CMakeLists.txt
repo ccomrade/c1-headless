@@ -32,6 +32,7 @@ add_executable(CrysisHeadlessServer
   Code/Launcher/Patch.cpp
   Code/Launcher/TaskSystem.cpp
   Code/Launcher/Util.cpp
+  Code/Launcher/Validator.cpp
   Code/Library/printf/printf.cpp
   Code/Launcher/Main.rc
 )

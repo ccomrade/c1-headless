@@ -7,6 +7,7 @@
 
 class Log;
 class TaskSystem;
+class Validator;
 class EngineListener;
 
 struct ISystem;
@@ -15,6 +16,7 @@ struct LauncherEnv
 {
 	Log *pLog;
 	TaskSystem *pTaskSystem;
+	Validator *pValidator;
 	EngineListener *pEngineListener;
 
 	ISystem *pSystem;
