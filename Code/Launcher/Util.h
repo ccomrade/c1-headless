@@ -5,13 +5,23 @@
 
 #pragma once
 
-#include <stddef.h>  // size_t
+#include <stddef.h>
 
-int FillNOP( void *address, size_t length );
-int FillMem( void *address, const void *data, size_t length );
+namespace Util
+{
+	int FillNOP( void *address, size_t length );
+	int FillMem( void *address, const void *data, size_t length );
 
-int GetCrysisGameVersion( void *lib );
+	int GetCrysisGameVersion( void *lib );
 
-bool HasAMDProcessor();
-bool Is3DNowSupported();
+	inline void *CalculateAddress( void *base, size_t offset )
+	{
+		return static_cast<unsigned char*>( base ) + offset;
+	}
+
+	inline const void *CalculateAddress( const void *base, size_t offset )
+	{
+		return static_cast<const unsigned char*>( base ) + offset;
+	}
+}
 

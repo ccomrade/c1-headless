@@ -7,15 +7,7 @@
 #include "Patch.h"
 #include "Util.h"
 
-static void *CalculateAddress( void *base, size_t offset )
-{
-	return static_cast<unsigned char*>( base ) + offset;
-}
-
-static const void *CalculateAddress( const void *base, size_t offset )
-{
-	return static_cast<const unsigned char*>( base ) + offset;
-}
+using namespace Util;
 
 /**
  * @brief Disables automatic creation of "gameplaystatsXXX.txt" files.
@@ -176,7 +168,7 @@ int PatchDuplicateCDKey( void *libCryNetwork, int gameVersion )
  */
 int PatchDisable3DNow( void *libCrySystem, int gameVersion )
 {
-	const unsigned char flags = 0x18;  // default feature flags without CPUF_3DNOW flag
+	const unsigned char flags = 0x18;  // default processor feature flags without CPUF_3DNOW flag
 
 	switch ( gameVersion )
 	{
@@ -243,8 +235,8 @@ int PatchDisable3DNow( void *libCrySystem, int gameVersion )
 /**
  * @brief Disables custom handling of unhandled exceptions.
  * This patch prevents the engine from enabling its own unhandled exception callback via SetUnhandledExceptionFilter function.
- * The callback is used to do various things after crash, such as calling ReportFault function or creating minidump. It depends on
- * value of sys_WER cvar (0, 1, or 2). However, everything done in this callback is completely useless and causes only problems.
+ * The callback is used to do various things after crash, such as calling ReportFault function or creating minidump. It depends
+ * on value of sys_WER cvar (0, 1, 2). However, everything done in this callback is completely useless and causes only problems.
  * Even MSDN documentation recommends that applications shouldn't try do such things at their own. Instead, they should let
  * operating system handle fatal errors for them.
  * @param libCrySystem CrySystem DLL handle.

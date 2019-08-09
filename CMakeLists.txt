@@ -24,10 +24,11 @@ endif()
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /DYNAMICBASE:NO")
 
 add_executable(CrysisHeadlessServer
+  Code/Launcher/CPU.cpp
   Code/Launcher/Main.cpp
-  Code/Launcher/Main.rc
   Code/Launcher/Patch.cpp
   Code/Launcher/Util.cpp
+  Code/Launcher/Main.rc
 )
 
 target_include_directories(CrysisHeadlessServer PRIVATE

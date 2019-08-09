@@ -15,6 +15,7 @@
 
 // Launcher headers
 #include "Patch.h"
+#include "CPU.h"
 #include "Util.h"
 
 #include "config.h"
@@ -90,6 +91,35 @@ struct CUserCallback : public ISystemUserCallback
 	}
 };
 
+class DLLHandleGuard
+{
+	HMODULE m_handle;
+
+public:
+	DLLHandleGuard( HMODULE handle )
+	: m_handle(handle)
+	{
+	}
+
+	~DLLHandleGuard()
+	{
+		if ( m_handle )
+		{
+			FreeLibrary( m_handle );
+		}
+	}
+
+	operator bool() const
+	{
+		return m_handle != NULL;
+	}
+
+	operator HMODULE()
+	{
+		return m_handle;
+	}
+};
+
 static int RunServer( HMODULE libCryGame )
 {
 	IGameStartup::TEntryFunction fCreateGameStartup;
@@ -98,14 +128,14 @@ static int RunServer( HMODULE libCryGame )
 	if ( fCreateGameStartup == NULL )
 	{
 		LogError( "The CryGame DLL is not valid!" );
-		return 1;
+		return -1;
 	}
 
 	IGameStartup *pGameStartup = fCreateGameStartup();
 	if ( pGameStartup == NULL )
 	{
 		LogError( "Unable to create the GameStartup interface!" );
-		return 1;
+		return -1;
 	}
 
 	CUserCallback userCallback;
@@ -128,29 +158,30 @@ static int RunServer( HMODULE libCryGame )
 	else
 	{
 		LogError( "Command line is too long!" );
-		return 1;
+		return -1;
 	}
 
 	// init engine
 	IGameRef gameRef = pGameStartup->Init( params );
 	if ( gameRef == NULL )
 	{
-		LogError( "Game initialization failed!" );
+		LogError( "Engine initialization failed!" );
 		pGameStartup->Shutdown();
-		return 1;
+		return -1;
 	}
 
-	// init global environment for the launcher
+	// init CryEngine global environment for the launcher
 	ModuleInitISystem( params.pSystem );
 
 	LogInfo( "Server started" );
 
 	// enter update loop
-	pGameStartup->Run( NULL );
+	int status = pGameStartup->Run( NULL );
+	LogInfo( "Engine exit code: %d", status );
 
 	pGameStartup->Shutdown();
 
-	return 0;
+	return (status != 0) ? -1 : 0;
 }
 
 static int InstallMemoryPatches( int version, void *libCryAction, void *libCryNetwork, void *libCrySystem )
@@ -170,7 +201,7 @@ static int InstallMemoryPatches( int version, void *libCryAction, void *libCryNe
 	if ( PatchUnhandledExceptions( libCrySystem, version ) < 0 )
 		return -1;
 
-	if ( HasAMDProcessor() && ! Is3DNowSupported() )
+	if ( CPU::IsAMD() && ! CPU::Has3DNow() )
 	{
 		// Dedicated server usually doesn't execute any code with 3DNow! instructions, but we should still make sure that
 		// ISystem::GetCPUFlags always returns correct flags.
@@ -186,45 +217,48 @@ int main()
 {
 	LogInfo( "C1-Headless " LAUNCHER_BUILD_VERSION );
 
-	HMODULE libCryGame = LoadLibraryA( "CryGame.dll" );
-	if ( libCryGame == NULL )
+	DLLHandleGuard libCryGame = LoadLibraryA( "CryGame.dll" );
+	if ( ! libCryGame )
 	{
 		LogError( "Unable to load the CryGame DLL!" );
 		return 1;
 	}
 
-	HMODULE libCryAction = LoadLibraryA( "CryAction.dll" );
-	if ( libCryAction == NULL )
+	DLLHandleGuard libCryAction = LoadLibraryA( "CryAction.dll" );
+	if ( ! libCryAction )
 	{
 		LogError( "Unable to load the CryAction DLL!" );
 		return 1;
 	}
 
-	HMODULE libCryNetwork = LoadLibraryA( "CryNetwork.dll" );
-	if ( libCryNetwork == NULL )
+	DLLHandleGuard libCryNetwork = LoadLibraryA( "CryNetwork.dll" );
+	if ( ! libCryNetwork )
 	{
 		LogError( "Unable to load the CryNetwork DLL!" );
 		return 1;
 	}
 
-	HMODULE libCrySystem = LoadLibraryA( "CrySystem.dll" );
-	if ( libCrySystem == NULL )
+	// no heap allocations should be done before CrySystem is loaded
+	DLLHandleGuard libCrySystem = LoadLibraryA( "CrySystem.dll" );
+	if ( ! libCrySystem )
 	{
 		LogError( "Unable to load the CrySystem DLL!" );
 		return 1;
 	}
 
 	// obtain game build number from CrySystem DLL
-	int gameVersion = GetCrysisGameVersion( libCrySystem );
+	int gameVersion = Util::GetCrysisGameVersion( libCrySystem );
 	if ( gameVersion < 0 )
 	{
 		LogError( "Unable to obtain game version from the CrySystem DLL!" );
 		return 1;
 	}
+	else
+	{
+		Log( "Detected game version: %d", gameVersion );
+	}
 
-	Log( "Detected game version - %d", gameVersion );
-
-	// check vesion of the game and apply memory patches
+	// check version of the game and apply memory patches
 	switch ( gameVersion )
 	{
 		case 5767:
@@ -237,6 +271,10 @@ int main()
 				LogError( "Unable to apply memory patch!" );
 				return 1;
 			}
+			else
+			{
+				LogInfo( "All memory patches installed successfully" );
+			}
 			break;
 		}
 		default:
@@ -246,16 +284,9 @@ int main()
 		}
 	}
 
-	LogInfo( "All memory patches installed successfully" );
-
 	// launch the server
 	int status = RunServer( libCryGame );
 
-	FreeLibrary( libCrySystem );
-	FreeLibrary( libCryNetwork );
-	FreeLibrary( libCryAction );
-	FreeLibrary( libCryGame );
-
-	return status;
+	return (status < 0) ? 1 : 0;
 }
 
