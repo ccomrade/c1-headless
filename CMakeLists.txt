@@ -25,6 +25,7 @@ set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /DYNAMICBASE:NO")
 
 add_executable(CrysisHeadlessServer
   Code/Launcher/CPU.cpp
+  Code/Launcher/LauncherEnv.cpp
   Code/Launcher/Main.cpp
   Code/Launcher/Patch.cpp
   Code/Launcher/Util.cpp

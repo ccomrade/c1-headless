@@ -14,6 +14,7 @@
 #include "ISystem.h"
 
 // Launcher headers
+#include "LauncherEnv.h"
 #include "Patch.h"
 #include "CPU.h"
 #include "Util.h"
@@ -25,6 +26,25 @@
 #else
 #define LAUNCHER_BUILD_VERSION C1HEADLESS_VERSION_STRING " 32-bit"
 #endif
+
+class GlobalLauncherEnv
+{
+	LauncherEnv m_env;
+
+public:
+	GlobalLauncherEnv()
+	{
+		memset( &m_env, 0, sizeof m_env );
+		gLauncher = &m_env;
+
+		gLauncher->mainThreadID = GetCurrentThreadId();
+	}
+
+	~GlobalLauncherEnv()
+	{
+		gLauncher = NULL;
+	}
+};
 
 static void LogInfo( const char *msg )
 {
@@ -215,6 +235,8 @@ static int InstallMemoryPatches( int version, void *libCryAction, void *libCryNe
 
 int main()
 {
+	GlobalLauncherEnv env;
+
 	LogInfo( "C1-Headless " LAUNCHER_BUILD_VERSION );
 
 	DLLHandleGuard libCryGame = LoadLibraryA( "CryGame.dll" );
@@ -255,6 +277,7 @@ int main()
 	}
 	else
 	{
+		gLauncher->gameVersion = gameVersion;
 		Log( "Detected game version: %d", gameVersion );
 	}
 
