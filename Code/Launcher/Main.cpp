@@ -15,6 +15,7 @@
 #include "Validator.h"
 #include "TaskSystem.h"
 #include "Log.h"
+#include "ILauncher.h"
 #include "Patch.h"
 #include "CPU.h"
 #include "Util.h"
@@ -112,8 +113,97 @@ public:
 	}
 };
 
+class LauncherAPI : public ILauncher
+{
+	static LauncherAPI *s_pInstance;
+
+public:
+	LauncherAPI()
+	{
+		s_pInstance = this;
+	}
+
+	~LauncherAPI()
+	{
+		s_pInstance = NULL;
+	}
+
+	static LauncherAPI *Get()
+	{
+		return s_pInstance;
+	}
+
+	const char *GetName() override
+	{
+		return "C1-Headless";
+	}
+
+	int GetVersionMajor() override
+	{
+		return C1HEADLESS_VERSION_MAJOR;
+	}
+
+	int GetVersionMinor() override
+	{
+		return C1HEADLESS_VERSION_MINOR;
+	}
+
+	int GetGameVersion() override
+	{
+		return gLauncher->gameVersion;
+	}
+
+	int GetDefaultLogVerbosity() override
+	{
+		return 1;
+	}
+
+	unsigned long GetMainThreadID() override
+	{
+		return gLauncher->mainThreadID;
+	}
+
+	void DispatchTask( ILauncherTask *pTask ) override
+	{
+		gLauncher->pTaskSystem->AddTask( pTask );
+	}
+
+	void LogToStdOut( const char *format, ... ) override
+	{
+		va_list args;
+		va_start( args, format );
+		gLauncher->pLog->LogToStdOutV( format, args, NULL );
+		va_end( args );
+	}
+
+	void LogToStdErr( const char *format, ... ) override
+	{
+		va_list args;
+		va_start( args, format );
+		gLauncher->pLog->LogToStdErrV( format, args, NULL );
+		va_end( args );
+	}
+
+	void LogToStdOutV( const char *format, va_list args, const char *prefix = NULL ) override
+	{
+		gLauncher->pLog->LogToStdOutV( format, args, prefix );
+	}
+
+	void LogToStdErrV( const char *format, va_list args, const char *prefix = NULL ) override
+	{
+		gLauncher->pLog->LogToStdErrV( format, args, prefix );
+	}
+};
+
+LauncherAPI *LauncherAPI::s_pInstance = NULL;
+
 extern "C"
 {
+	DLL_EXPORT ILauncher *GetILauncher()
+	{
+		return LauncherAPI::Get();
+	}
+
 	void _putchar( char c )  // required by the printf library
 	{
 		// "printf" and "vprintf" functions are not used, so this function can be empty
@@ -231,6 +321,7 @@ static int InstallMemoryPatches( int version, void *libCryAction, void *libCryNe
 int main()
 {
 	GlobalLauncherEnv env;
+	LauncherAPI api;
 
 	// init launcher log required by "LogInfo" and "LogError" functions
 	env.InitLog();
