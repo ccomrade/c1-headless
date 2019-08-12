@@ -16,6 +16,7 @@
 #include "TaskSystem.h"
 #include "Log.h"
 #include "ILauncher.h"
+#include "CmdLine.h"
 #include "Patch.h"
 #include "CPU.h"
 #include "Util.h"
@@ -356,6 +357,8 @@ int main()
 		LogError( "Unable to load the CrySystem DLL!" );
 		return 1;
 	}
+
+	CmdLine::Log();
 
 	// obtain game build number from CrySystem DLL
 	int gameVersion = Util::GetCrysisGameVersion( libCrySystem );
