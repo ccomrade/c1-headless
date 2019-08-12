@@ -3,11 +3,56 @@
  * @brief Implementation of utilities.
  */
 
+#include <ctype.h>
+#include <string.h>
+
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
 // Launcher headers
 #include "Util.h"
+
+/**
+ * @brief Finds substring in string without case sensitivity.
+ * Note that it works correctly only with ASCII strings.
+ * @param buffer The string.
+ * @param string The substring.
+ * @return Pointer to the first character of the found substring, or NULL if the substring wasn't found.
+ */
+char *Util::FindStringNoCase( char *buffer, const char *string )
+{
+	if ( ! *string )
+	{
+		return buffer;
+	}
+
+	for ( ; *buffer; buffer++ )
+	{
+		if ( tolower( *buffer ) == tolower( *string ) )
+		{
+			const char *b = buffer + 1;
+			const char *s = string + 1;
+
+			while ( *b && *s )
+			{
+				if ( tolower( *b ) != tolower( *s ) )
+				{
+					break;
+				}
+
+				b++;
+				s++;
+			}
+
+			if ( ! *s )
+			{
+				return buffer;
+			}
+		}
+	}
+
+	return NULL;
+}
 
 /**
  * @brief Fills read-only memory region with x86 NOP instruction.

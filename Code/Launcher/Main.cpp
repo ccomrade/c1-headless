@@ -319,6 +319,69 @@ static int InstallMemoryPatches( int version, void *libCryAction, void *libCryNe
 	return 0;
 }
 
+static bool GetRootFolder( std::string & rootFolder )
+{
+	rootFolder = CmdLine::GetArgValue( "-root" );
+
+	if ( rootFolder.empty() )
+	{
+		char buffer[MAX_PATH];
+		DWORD length = GetModuleFileNameA( NULL, buffer, sizeof buffer );
+		if ( length == 0 )
+		{
+			LogError( "Unable to get root folder: error code %lu", GetLastError() );
+			return false;
+		}
+		else if ( length >= sizeof buffer )
+		{
+			LogError( "Absolute path to the launcher executable is too long!" );
+			return false;
+		}
+
+		// remove file name
+		for ( int i = length-1; i >= 0; i-- )
+		{
+			if ( buffer[i] == '\\' )
+			{
+				buffer[i] = '\0';
+				length = i;
+				break;
+			}
+		}
+
+		// remove Bin32 or Bin64
+		if ( char *pos = Util::FindStringNoCase( buffer, "\\Bin32" ) )
+		{
+			(*pos) = '\0';
+			length -= 6;  // length of "\\Bin32"
+		}
+		else if ( char *pos = Util::FindStringNoCase( buffer, "\\Bin64" ) )
+		{
+			(*pos) = '\0';
+			length -= 6;  // length of "\\Bin64"
+		}
+
+		rootFolder = buffer;
+	}
+
+	// convert any forward slashes to backslashes
+	for ( size_t i = 0; i < rootFolder.length(); i++ )
+	{
+		if ( rootFolder[i] == '/' )
+		{
+			rootFolder[i] = '\\';
+		}
+	}
+
+	// remove any trailing slashes
+	while ( ! rootFolder.empty() && rootFolder[rootFolder.length()-1] == '\\' )
+	{
+		rootFolder.erase( rootFolder.length()-1, 1 );
+	}
+
+	return true;
+}
+
 int main()
 {
 	GlobalLauncherEnv env;
@@ -359,6 +422,17 @@ int main()
 	}
 
 	CmdLine::Log();
+
+	std::string rootFolder;
+	if ( GetRootFolder( rootFolder ) )
+	{
+		gLauncher->rootFolder = rootFolder.c_str();
+		LogInfo( "Root folder: \"%s\"", gLauncher->rootFolder );
+	}
+	else
+	{
+		return 1;
+	}
 
 	// obtain game build number from CrySystem DLL
 	int gameVersion = Util::GetCrysisGameVersion( libCrySystem );

@@ -23,6 +23,7 @@ struct LauncherEnv
 
 	int gameVersion;
 	unsigned long mainThreadID;
+	const char *rootFolder;
 };
 
 extern LauncherEnv *gLauncher;
