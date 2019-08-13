@@ -156,7 +156,7 @@ public:
 
 	int GetDefaultLogVerbosity() override
 	{
-		return 1;
+		return gLauncher->defaultLogVerbosity;
 	}
 
 	unsigned long GetMainThreadID() override
@@ -252,9 +252,10 @@ static int RunServer( HMODULE libCryGame )
 	memset( &params, 0, sizeof params );
 
 	params.hInstance = GetModuleHandle( NULL );
+	params.pLog = gLauncher->pLog->GetEngineLog();
 	params.pUserCallback = gLauncher->pEngineListener;  // disables dedicated server console window
 	params.pValidator = gLauncher->pValidator;
-	params.sLogFileName = "Server.log";
+	params.sLogFileName = gLauncher->pLog->GetEngineLog()->GetFileName();
 	params.bDedicatedServer = true;  // better than adding "-dedicated" to the command line
 
 	if ( cmdLineLength < sizeof params.szSystemCmdLine )
@@ -477,6 +478,18 @@ int main()
 	env.InitTaskSystem();
 	env.InitValidator();
 	env.InitEngineListerner();
+
+	// init CryEngine log replacement
+	if ( ! gLauncher->pLog->InitEngineLog() )
+	{
+		LogError( "Log initialization failed!" );
+		return 1;
+	}
+	else
+	{
+		EngineLog *pLog = gLauncher->pLog->GetEngineLog();
+		LogInfo( "Log initialized: file = %s | verbosity = %d", pLog->GetFileName(), pLog->GetVerbosityLevel() );
+	}
 
 	// launch the server
 	int status = RunServer( libCryGame );

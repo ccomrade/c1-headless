@@ -22,6 +22,7 @@ struct LauncherEnv
 	ISystem *pSystem;
 
 	int gameVersion;
+	int defaultLogVerbosity;
 	unsigned long mainThreadID;
 	const char *rootFolder;
 };
