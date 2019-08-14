@@ -346,7 +346,7 @@ void EngineLog::Impl::RegisterConsoleVariables()
 	);
 
 	m_pLogIncludeTimeCVar = pConsole->RegisterInt( "log_IncludeTime", 0, VF_NOT_NET_SYNCED,
-	  "Toggles time stamping of log entries."
+	  "Toggles time stamping of log entries.\n"
 	  "Usage: log_IncludeTime [0/1/2/3/4]\n"
 	  "  0 = Off (default).\n"
 	  "  1 = Current time.\n"
