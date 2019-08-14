@@ -303,6 +303,9 @@ static int InstallMemoryPatches( int version, void *libCryAction, void *libCryNe
 	if ( PatchDuplicateCDKey( libCryNetwork, version ) < 0 )
 		return -1;
 
+	if ( PatchServerProfiler( libCryNetwork, version ) < 0 )
+		return -1;
+
 	// CrySystem
 
 	if ( PatchUnhandledExceptions( libCrySystem, version ) < 0 )

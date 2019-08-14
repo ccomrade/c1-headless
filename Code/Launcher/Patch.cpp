@@ -160,6 +160,52 @@ int PatchDuplicateCDKey( void *libCryNetwork, int gameVersion )
 }
 
 /**
+ * @brief Disables server profiler - "server_profile.txt" file.
+ * Only 32-bit version has server profiler.
+ * @param libCryNetwork CryNetwork DLL handle.
+ * @param gameVersion Game build number.
+ * @return 0 if no error occurred, otherwise -1.
+ */
+int PatchServerProfiler( void *libCryNetwork, int gameVersion )
+{
+#ifndef BUILD_64BIT
+	switch ( gameVersion )
+	{
+		case 5767:
+		{
+			if ( FillNOP( CalculateAddress( libCryNetwork, 0x9F435 ), 0x5 ) < 0 )
+				return -1;
+			break;
+		}
+		case 5879:
+		{
+			if ( FillNOP( CalculateAddress( libCryNetwork, 0x9CA81 ), 0x5 ) < 0 )
+				return -1;
+			break;
+		}
+		case 6115:
+		{
+			if ( FillNOP( CalculateAddress( libCryNetwork, 0x9C665 ), 0x5 ) < 0 )
+				return -1;
+			break;
+		}
+		case 6156:
+		{
+			if ( FillNOP( CalculateAddress( libCryNetwork, 0x9BE2E ), 0x5 ) < 0 )
+				return -1;
+			break;
+		}
+		default:
+		{
+			return -1;
+		}
+	}
+#endif
+
+	return 0;
+}
+
+/**
  * @brief Disables use of 3DNow! instructions.
  * This patch fixes the well known crash of 32-bit Crysis on modern AMD processors.
  * @param libCrySystem CrySystem DLL handle.

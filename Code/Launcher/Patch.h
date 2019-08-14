@@ -10,6 +10,7 @@ int PatchGameplayStats( void *libCryAction, int gameVersion );
 
 // CryNetwork
 int PatchDuplicateCDKey( void *libCryNetwork, int gameVersion );
+int PatchServerProfiler( void *libCryNetwork, int gameVersion );
 
 // CrySystem
 int PatchDisable3DNow( void *libCrySystem, int gameVersion );
