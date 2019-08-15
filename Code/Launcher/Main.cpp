@@ -291,7 +291,8 @@ static int RunServer( HMODULE libCryGame )
 	return (status != 0) ? -1 : 0;
 }
 
-static int InstallMemoryPatches( int version, void *libCryAction, void *libCryNetwork, void *libCrySystem )
+static int InstallMemoryPatches( int version, void *libCryAction, void *libCryNetwork,
+                                 void *libCrySystem, void *libCryRenderNULL )
 {
 	// CryAction
 
@@ -313,12 +314,17 @@ static int InstallMemoryPatches( int version, void *libCryAction, void *libCryNe
 
 	if ( CPU::IsAMD() && ! CPU::Has3DNow() )
 	{
-		// Dedicated server usually doesn't execute any code with 3DNow! instructions, but we should still make sure that
-		// ISystem::GetCPUFlags always returns correct flags.
+		// Dedicated server usually doesn't execute any code with 3DNow! instructions, but
+		// we should still make sure that ISystem::GetCPUFlags always returns correct flags.
 
 		if ( PatchDisable3DNow( libCrySystem, version ) < 0 )
 			return -1;
 	}
+
+	// CryRenderNULL
+
+	if ( PatchRenderAuxGeom( libCryRenderNULL, version ) < 0 )
+		return -1;
 
 	return 0;
 }
@@ -425,6 +431,13 @@ int main()
 		return 1;
 	}
 
+	DLLHandleGuard libCryRenderNULL = LoadLibraryA( "CryRenderNULL.dll" );
+	if ( ! libCryRenderNULL )
+	{
+		LogError( "Unable to load the CryRenderNULL DLL!" );
+		return 1;
+	}
+
 	CmdLine::Log();
 
 	std::string rootFolder;
@@ -459,7 +472,8 @@ int main()
 		case 6115:
 		case 6156:
 		{
-			if ( InstallMemoryPatches( gameVersion, libCryAction, libCryNetwork, libCrySystem ) < 0 )
+			if ( InstallMemoryPatches( gameVersion, libCryAction, libCryNetwork,
+			                           libCrySystem, libCryRenderNULL ) < 0 )
 			{
 				LogError( "Unable to apply memory patch!" );
 				return 1;

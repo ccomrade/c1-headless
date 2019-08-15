@@ -16,3 +16,6 @@ int PatchServerProfiler( void *libCryNetwork, int gameVersion );
 int PatchDisable3DNow( void *libCrySystem, int gameVersion );
 int PatchUnhandledExceptions( void *libCrySystem, int gameVersion );
 
+// CryRenderNULL
+int PatchRenderAuxGeom( void *libCryRenderNULL, int gameVersion );
+

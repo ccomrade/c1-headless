@@ -6,8 +6,11 @@
 // Launcher headers
 #include "Patch.h"
 #include "Util.h"
+#include "NULLRenderAuxGeom.h"
 
 using namespace Util;
+
+static CNULLRenderAuxGeom g_renderAuxGeom;
 
 /**
  * @brief Disables automatic creation of "gameplaystatsXXX.txt" files.
@@ -356,6 +359,107 @@ int PatchUnhandledExceptions( void *libCrySystem, int gameVersion )
 			if ( FillNOP( CalculateAddress( libCrySystem, 0x17D67 ), 0x5  ) < 0
 			  || FillNOP( CalculateAddress( libCrySystem, 0x17D72 ), 0xC  ) < 0
 			  || FillNOP( CalculateAddress( libCrySystem, 0x59DF8 ), 0x13 ) < 0 )
+				return -1;
+			break;
+		}
+	#endif
+		default:
+		{
+			return -1;
+		}
+	}
+
+	return 0;
+}
+
+/**
+ * @brief Disables existing RenderAuxGeom in CryRenderNULL and replaces it with custom empty implementation.
+ * This patch disables all that useless debug renderer junk in CryRenderNULL.
+ * @param libCryRenderNULL CryRenderNULL DLL handle.
+ * @param gameVersion Game build number.
+ * @return 0 if no error occurred, otherwise -1.
+ */
+int PatchRenderAuxGeom( void *libCryRenderNULL, int gameVersion )
+{
+	const unsigned char code[] = {
+		0xC3,  // ret
+	#ifdef BUILD_64BIT
+		0x90,  // nop
+	#endif
+		0x90,  // nop
+		0x90,  // nop
+		0x90,  // nop
+		0x90,  // nop
+		0x90   // nop
+	};
+
+	void *pAuxGeom = &g_renderAuxGeom;
+
+	switch ( gameVersion )
+	{
+	#ifdef BUILD_64BIT
+		case 5767:
+		{
+			if ( FillNOP( CalculateAddress( libCryRenderNULL, 0x21A5 ), 0x32 ) < 0
+			  || FillMem( CalculateAddress( libCryRenderNULL, 0x16BE ), code, sizeof code ) < 0
+			  || FillMem( CalculateAddress( libCryRenderNULL, 0x16D0 ), code, sizeof code ) < 0
+			  || FillMem( CalculateAddress( libCryRenderNULL, 0xBBD58 ), &pAuxGeom, sizeof pAuxGeom ) < 0 )
+				return -1;
+			break;
+		}
+		case 5879:
+		{
+			if ( FillNOP( CalculateAddress( libCryRenderNULL, 0x21B5 ), 0x32 ) < 0
+			  || FillMem( CalculateAddress( libCryRenderNULL, 0x16CE ), code, sizeof code ) < 0
+			  || FillMem( CalculateAddress( libCryRenderNULL, 0x16E0 ), code, sizeof code ) < 0
+			  || FillMem( CalculateAddress( libCryRenderNULL, 0xBBD58 ), &pAuxGeom, sizeof pAuxGeom ) < 0 )
+				return -1;
+			break;
+		}
+		case 6115:
+		{
+			if ( FillNOP( CalculateAddress( libCryRenderNULL, 0x21C5 ), 0x32 ) < 0
+			  || FillMem( CalculateAddress( libCryRenderNULL, 0x16BE ), code, sizeof code ) < 0
+			  || FillMem( CalculateAddress( libCryRenderNULL, 0x16D0 ), code, sizeof code ) < 0
+			  || FillMem( CalculateAddress( libCryRenderNULL, 0xBBD98 ), &pAuxGeom, sizeof pAuxGeom ) < 0 )
+				return -1;
+			break;
+		}
+		case 6156:
+		{
+			if ( FillNOP( CalculateAddress( libCryRenderNULL, 0x2205 ), 0x32 ) < 0
+			  || FillMem( CalculateAddress( libCryRenderNULL, 0x16CE ), code, sizeof code ) < 0
+			  || FillMem( CalculateAddress( libCryRenderNULL, 0x16E0 ), code, sizeof code ) < 0
+			  || FillMem( CalculateAddress( libCryRenderNULL, 0xBBD98 ), &pAuxGeom, sizeof pAuxGeom ) < 0 )
+				return -1;
+			break;
+		}
+	#else
+		case 5767:
+		case 5879:  // same offsets
+		{
+			if ( FillNOP( CalculateAddress( libCryRenderNULL, 0x208C ), 0x18 ) < 0
+			  || FillMem( CalculateAddress( libCryRenderNULL, 0x1895 ), code, sizeof code ) < 0
+			  || FillMem( CalculateAddress( libCryRenderNULL, 0x18A9 ), code, sizeof code ) < 0
+			  || FillMem( CalculateAddress( libCryRenderNULL, 0xD2D0C ), &pAuxGeom, sizeof pAuxGeom ) < 0 )
+				return -1;
+			break;
+		}
+		case 6115:
+		{
+			if ( FillNOP( CalculateAddress( libCryRenderNULL, 0x208C ), 0x18 ) < 0
+			  || FillMem( CalculateAddress( libCryRenderNULL, 0x1895 ), code, sizeof code ) < 0
+			  || FillMem( CalculateAddress( libCryRenderNULL, 0x18A9 ), code, sizeof code ) < 0
+			  || FillMem( CalculateAddress( libCryRenderNULL, 0xD2D2C ), &pAuxGeom, sizeof pAuxGeom ) < 0 )
+				return -1;
+			break;
+		}
+		case 6156:
+		{
+			if ( FillNOP( CalculateAddress( libCryRenderNULL, 0x208C ), 0x18 ) < 0
+			  || FillMem( CalculateAddress( libCryRenderNULL, 0x1895 ), code, sizeof code ) < 0
+			  || FillMem( CalculateAddress( libCryRenderNULL, 0x18A9 ), code, sizeof code ) < 0
+			  || FillMem( CalculateAddress( libCryRenderNULL, 0xD3D2C ), &pAuxGeom, sizeof pAuxGeom ) < 0 )
 				return -1;
 			break;
 		}
