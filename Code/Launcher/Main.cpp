@@ -301,6 +301,9 @@ static int InstallMemoryPatches( int version, void *libCryAction, void *libCryNe
 
 	// CryNetwork
 
+	if ( PatchEnablePreordered( libCryNetwork, version ) < 0 )
+		return -1;
+
 	if ( PatchDuplicateCDKey( libCryNetwork, version ) < 0 )
 		return -1;
 

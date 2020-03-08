@@ -9,6 +9,7 @@
 int PatchGameplayStats( void *libCryAction, int gameVersion );
 
 // CryNetwork
+int PatchEnablePreordered( void *libCryNetwork, int gameVersion );
 int PatchDuplicateCDKey( void *libCryNetwork, int gameVersion );
 int PatchServerProfiler( void *libCryNetwork, int gameVersion );
 
