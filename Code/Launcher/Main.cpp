@@ -15,6 +15,7 @@
 #include "Validator.h"
 #include "TaskSystem.h"
 #include "Log.h"
+#include "MessageBoxHook.h"
 #include "ILauncher.h"
 #include "CmdLine.h"
 #include "Patch.h"
@@ -397,6 +398,8 @@ static bool GetRootFolder( std::string & rootFolder )
 
 int main()
 {
+	MessageBoxHook::Init();
+
 	GlobalLauncherEnv env;
 	LauncherAPI api;
 

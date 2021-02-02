@@ -30,6 +30,7 @@ add_executable(CrysisHeadlessServer
   Code/Launcher/LauncherEnv.cpp
   Code/Launcher/Log.cpp
   Code/Launcher/Main.cpp
+  Code/Launcher/MessageBoxHook.cpp
   Code/Launcher/NULLRenderAuxGeom.cpp
   Code/Launcher/Patch.cpp
   Code/Launcher/TaskSystem.cpp
